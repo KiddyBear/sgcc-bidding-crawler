@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: sgcc-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sgcc_crawler}
+      MYSQL_USER: ${MYSQL_USER:-inspection}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sgcc-network
+
+  # 爬虫应用
+  crawler:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: sgcc-bidding-crawler:latest
+    container_name: sgcc-crawler
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # 数据库配置
+      MYSQL_HOST: 192.168.111.111
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sgcc_crawler}
+      MYSQL_USER: ${MYSQL_USER:-sgcc}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sgcc123}
+      # 钉钉配置
+      DINGTALK_ENABLED: ${DINGTALK_ENABLED:-true}
+      DINGTALK_WEBHOOK: ${DINGTALK_WEBHOOK:-}
+      DINGTALK_SECRET: ${DINGTALK_SECRET:-}
+      # JVM配置
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
+      TZ: Asia/Shanghai
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - crawler-logs:/app/logs
+    networks:
+      - sgcc-network
+
+volumes:
+  mysql-data:
+    driver: local
+  crawler-logs:
+    driver: local
+
+networks:
+  sgcc-network:
+    driver: bridge

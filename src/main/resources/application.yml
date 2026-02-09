@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sgcc-crawler
+  profiles:
+    active: prod # 默认激活local配置，生产环境改为prod
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.111.111:3306/sgcc_crawler?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: inspection
+    password: ENC(vijNB1Ji+VTR3KJ9Jueu52CIg7bvFmnN)
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: SGCCHikariPool
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 钉钉机器人配置
+dingtalk:
+  enabled: true
+  webhook: ENC(b2laeEw6JlbxDzvO4pcr4+c0/K26JeWrD56IR/qGhP3k2PEGGo8IWXjDYQ/yIH7t+mKFOHXhkXw5b3ir0PwfyFzSBK3pIMsbZJ2TgOBZHuLv79KYP93TaAodkZWK8tv74UoOcomPX9SZdMUEzXTQ+Rrk/FeLr+uFbbqNfkd918g=)
+  secret: ENC(IshguzJww21kwotCL2Gn6lVAc6Um+m6IZnFWTlCabB2FpkaeUoiY7gxsLWXdChMoPLawN+M60NAOQ8cHIt2L1G+D1t+Vy7kaKupdAu+T6XQ=)
+  at-mobiles:  # 需要@的手机号列表
+  at-all: false
+
+# 爬虫配置
+crawler:
+  # 目标网站
+  target-url: https://ecp.sgcc.com.cn/ecp2.0/portal/#/
+  # 页面加载等待时间(秒)
+  page-load-timeout: 30
+  # 元素等待超时时间(秒)
+  element-wait-timeout: 10
+  # 请求间隔时间(毫秒)，防止过快访问
+  request-interval: 2000
+  # 是否启用无头模式
+  headless: false
+  # Chrome驱动路径(留空则自动下载)
+  chrome-driver-path:
+  # 每次爬取的最大页数
+  max-pages: 5
+  # 定时任务cron表达式(每小时执行一次)
+  cron: "0 0 * * * ?"
+  download-file-path: E:\\1_project\\国网招标信息-Java\\data
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.sgcc.crawler: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/sgcc-crawler.log
+    max-size: 10MB
+    max-history: 30
