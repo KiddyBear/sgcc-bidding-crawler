@@ -1,5 +1,7 @@
 server:
   port: 8080
+  servlet:
+    context-path: /api
 
 spring:
   application:
@@ -60,7 +62,22 @@ crawler:
   max-pages: 5
   # 定时任务cron表达式(每小时执行一次)
   cron: "0 0 * * * ?"
-  download-file-path: E:\\1_project\\国网招标信息-Java\\data
+  download-file-path: /app/data
+
+# Actuator 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
 
 # 日志配置
 logging:
@@ -68,6 +85,7 @@ logging:
     root: INFO
     com.sgcc.crawler: DEBUG
     org.springframework.web: INFO
+    org.springframework.boot.actuate: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:

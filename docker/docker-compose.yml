@@ -1,69 +1,83 @@
 version: '3.8'
 
-services:
-  # MySQL数据库
-  mysql:
-    image: mysql:8.0
-    container_name: sgcc-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-sgcc_crawler}
-      MYSQL_USER: ${MYSQL_USER:-inspection}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123}
-      TZ: Asia/Shanghai
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ../src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - sgcc-network
+# 国网招标爬虫 - Docker Compose 配置
+# 服务名称：sgcc-crawler
 
-  # 爬虫应用
-  crawler:
+services:
+  sgcc-crawler:
+    # 使用本地构建的镜像
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: sgcc-bidding-crawler:latest
+    
+    # 容器名称
     container_name: sgcc-crawler
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      # 数据库配置
-      MYSQL_HOST: 192.168.111.111
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-sgcc_crawler}
-      MYSQL_USER: ${MYSQL_USER:-sgcc}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sgcc123}
-      # 钉钉配置
-      DINGTALK_ENABLED: ${DINGTALK_ENABLED:-true}
-      DINGTALK_WEBHOOK: ${DINGTALK_WEBHOOK:-}
-      DINGTALK_SECRET: ${DINGTALK_SECRET:-}
-      # JVM配置
-      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC"
-      TZ: Asia/Shanghai
+    
+    # 镜像名称和标签
+    image: sgcc/crawler:latest
+    
+    # 端口映射：宿主机端口 -> 容器端口
     ports:
       - "${APP_PORT:-8080}:8080"
+    
+    # 数据卷挂载
     volumes:
-      - crawler-logs:/app/logs
+      # 应用数据持久化
+      - ${DATA_VOLUME:-/data/sgcc_bidding_crawler}:/app/data
+      # 日志持久化（可选）
+      - ./logs:/app/logs
+      
+    # 环境变量配置
+    environment:
+      # JVM 参数优化
+      - JAVA_OPTS=-Xms512m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+      # 应用配置文件激活
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      # 数据库配置（从环境变量读取）
+      - SPRING_DATASOURCE_URL=${DB_URL:-jdbc:mysql://host.docker.internal:3306/sgcc_crawler?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-inspection}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-ENC(vijNB1Ji+VTR3KJ9Jueu52CIg7bvFmnN)}
+      # 钉钉配置（从环境变量读取）
+      - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK:-}
+      - DINGTALK_SECRET=${DINGTALK_SECRET:-}
+      - DINGTALK_ENABLED=${DINGTALK_ENABLED:-true}
+      # 爬虫配置
+      - CRAWLER_HEADLESS=${CRAWLER_HEADLESS:-true}
+      - CRAWLER_MAX_PAGES=${CRAWLER_MAX_PAGES:-5}
+      - CRAWLER_REQUEST_INTERVAL=${CRAWLER_REQUEST_INTERVAL:-2000}
+      
+    # 容器重启策略：总是重启（开机自启）
+    restart: always
+    
+    # 容器健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # 网络配置
     networks:
       - sgcc-network
+    
+    # 容器标签（用于监控和管理）
+    labels:
+      - "com.sgcc.app.name=sgcc-bidding-crawler"
+      - "com.sgcc.app.version=1.0.0"
+      - "com.sgcc.environment=production"
 
-volumes:
-  mysql-data:
-    driver: local
-  crawler-logs:
-    driver: local
-
+# 自定义网络配置
 networks:
   sgcc-network:
     driver: bridge
+    name: sgcc-crawler-network
+
+# 卷配置（如果需要命名卷）
+# volumes:
+#   sgcc-data:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       o: bind
+#       device: ${DATA_VOLUME:-/data/sgcc_bidding_crawler}

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/doCrawl")
 @RequiredArgsConstructor
 public class CrawlerController {
 
