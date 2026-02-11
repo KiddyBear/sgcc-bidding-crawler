@@ -55,7 +55,9 @@ crawler:
   # 请求间隔时间(毫秒)，防止过快访问
   request-interval: 2000
   # 是否启用无头模式
-  headless: false
+  headless: true
+  # Chrome浏览器二进制路径(留空则自动检测)
+  chrome-binary-path:
   # Chrome驱动路径(留空则自动检测)
   chrome-driver-path: drivers/linux/chromedriver-linux64/chromedriver
   # 每次爬取的最大页数

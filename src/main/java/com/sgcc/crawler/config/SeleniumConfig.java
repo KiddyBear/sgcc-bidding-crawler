@@ -134,6 +134,13 @@ public class SeleniumConfig {
     public ChromeOptions createChromeOptions() {
         ChromeOptions options = new ChromeOptions();
 
+        // 设置Chrome浏览器二进制路径
+        String chromeBinary = detectChromeBinary();
+        if (chromeBinary != null) {
+            options.setBinary(chromeBinary);
+            log.info("设置Chrome浏览器路径: {}", chromeBinary);
+        }
+
         // 随机User-Agent
         String userAgent = USER_AGENTS.get(random.nextInt(USER_AGENTS.size()));
         options.addArguments("--user-agent=" + userAgent);
@@ -183,6 +190,51 @@ public class SeleniumConfig {
         }
 
         return options;
+    }
+
+    /**
+     * 检测Chrome浏览器二进制路径
+     * 优先使用配置项，其次检查环境变量，最后自动探测常见路径
+     */
+    private String detectChromeBinary() {
+        // 1. 优先使用配置文件中指定的路径
+        if (StringUtils.hasText(crawlerConfig.getChromeBinaryPath())) {
+            File configBinary = new File(crawlerConfig.getChromeBinaryPath());
+            if (configBinary.exists() && configBinary.canExecute()) {
+                return crawlerConfig.getChromeBinaryPath();
+            }
+            log.warn("配置的Chrome路径不存在或不可执行: {}", crawlerConfig.getChromeBinaryPath());
+        }
+
+        // 2. 检查环境变量 CHROME_BIN
+        String envChrome = System.getenv("CHROME_BIN");
+        if (StringUtils.hasText(envChrome)) {
+            File envBinary = new File(envChrome);
+            if (envBinary.exists() && envBinary.canExecute()) {
+                return envChrome;
+            }
+        }
+
+        // 3. 自动探测Linux下常见的Chrome安装路径
+        if ("linux".equals(getOsType())) {
+            List<String> linuxPaths = Arrays.asList(
+                    "/usr/bin/google-chrome-stable",
+                    "/usr/bin/google-chrome",
+                    "/opt/google/chrome/google-chrome",
+                    "/usr/bin/chromium-browser",
+                    "/usr/bin/chromium"
+            );
+            for (String path : linuxPaths) {
+                File binary = new File(path);
+                if (binary.exists() && binary.canExecute()) {
+                    return path;
+                }
+            }
+            log.warn("Linux环境未找到Chrome浏览器，已探测路径: {}", linuxPaths);
+        }
+
+        // Windows/Mac 一般不需要显式设置，Selenium能自动找到
+        return null;
     }
 
     /**

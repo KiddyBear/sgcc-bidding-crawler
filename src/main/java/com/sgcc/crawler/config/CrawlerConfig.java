@@ -48,9 +48,14 @@ public class CrawlerConfig {
     private int elementWaitTimeout = 10;
 
     /**
-     * Chrome驱动路径(可选，不设置则自动下载)
+     * Chrome驱动路径(可选，不设置则自动检测)
      */
     private String chromeDriverPath;
+
+    /**
+     * Chrome浏览器二进制路径(可选，不设置则自动检测)
+     */
+    private String chromeBinaryPath;
 
     /**
      * 是否使用无头模式

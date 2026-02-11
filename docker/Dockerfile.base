@@ -33,21 +33,39 @@ RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 
 # ---------- Google Chrome 浏览器 ----------
-# 如因网络问题无法安装，可将 google-chrome-stable.deb 放入 docker/ 目录
-# 然后取消下方注释，注释掉在线安装部分
-# COPY google-chrome-stable.deb /tmp/
-# RUN dpkg -i /tmp/google-chrome-stable.deb || apt-get -f install -y && rm /tmp/google-chrome-stable.deb
+# 使用本地预下载的 Chrome deb 包进行离线安装
+# 构建镜像前请确保文件存在：/home/bear/google-chrome-stable_current_amd64.deb
 
-#RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-#    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
-#        > /etc/apt/sources.list.d/google-chrome.list && \
-#    apt-get update && \
-#    apt-get install -y --no-install-recommends google-chrome-stable && \
-#    rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root /home/bear/google-chrome-stable_current_amd64.deb /tmp/chrome.deb
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        /tmp/chrome.deb \
+        fonts-liberation \
+        libasound2 \
+        libatk-bridge2.0-0 \
+        libatk1.0-0 \
+        libatspi2.0-0 \
+        libcups2 \
+        libdbus-1-3 \
+        libdrm2 \
+        libgbm1 \
+        libgtk-3-0 \
+        libnspr4 \
+        libnss3 \
+        libwayland-client0 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxkbcommon0 \
+        libxrandr2 \
+        xdg-utils && \
+    rm /tmp/chrome.deb && \
+    rm -rf /var/lib/apt/lists/*
 
 # ---------- 验证安装 ----------
-RUN echo "=== Java ===" && java -version
-#    echo "=== Chrome ===" && google-chrome --version
+RUN echo "=== Java ===" && java -version && \
+    echo "=== Chrome ===" && google-chrome --version
 
 # ---------- 应用目录 ----------
 WORKDIR /app
