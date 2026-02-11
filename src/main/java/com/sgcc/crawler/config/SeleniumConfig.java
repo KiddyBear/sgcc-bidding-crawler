@@ -85,14 +85,18 @@ public class SeleniumConfig {
         
         // 尝试多个可能的路径
         List<String> possiblePaths = Arrays.asList(
-                // 1. 带子目录的路径 (新版解压结构: chromedriver/win/chromedriver-win64/chromedriver.exe)
+                // 1. 容器环境中的 drivers 目录 (target/drivers/linux/chromedriver-linux64/chromedriver)
+                Paths.get("drivers", osType, subDir, driverName).toAbsolutePath().toString(),
+                // 2. 带子目录的路径 (新版解压结构: chromedriver/win/chromedriver-win64/chromedriver.exe)
                 Paths.get("chromedriver", osType, subDir, driverName).toAbsolutePath().toString(),
-                // 2. 兼容 Mac x64
+                // 3. 兼容 Mac x64
                 Paths.get("chromedriver", "mac", "chromedriver-mac-x64", driverName).toAbsolutePath().toString(),
-                // 3. 原有的直接路径 (旧版结构: chromedriver/win/chromedriver.exe)
+                // 4. 原有的直接路径 (旧版结构: chromedriver/win/chromedriver.exe)
                 Paths.get("chromedriver", osType, driverName).toAbsolutePath().toString(),
-                // 4. 当前工作目录下的路径
-                Paths.get(System.getProperty("user.dir"), "chromedriver", osType, subDir, driverName).toString()
+                // 5. 当前工作目录下的路径
+                Paths.get(System.getProperty("user.dir"), "chromedriver", osType, subDir, driverName).toString(),
+                // 6. 容器工作目录下的 drivers 路径
+                Paths.get("/app", "drivers", osType, subDir, driverName).toString()
         );
         
         for (String path : possiblePaths) {

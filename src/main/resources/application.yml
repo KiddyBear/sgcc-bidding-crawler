@@ -56,8 +56,8 @@ crawler:
   request-interval: 2000
   # 是否启用无头模式
   headless: false
-  # Chrome驱动路径(留空则自动下载)
-  chrome-driver-path:
+  # Chrome驱动路径(留空则自动检测)
+  chrome-driver-path: drivers/linux/chromedriver-linux64/chromedriver
   # 每次爬取的最大页数
   max-pages: 5
   # 定时任务cron表达式(每小时执行一次)

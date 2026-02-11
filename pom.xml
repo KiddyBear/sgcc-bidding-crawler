@@ -139,7 +139,90 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <!-- 打包时包含所有依赖 -->
+                    <layout>ZIP</layout>
                 </configuration>
+            </plugin>
+            
+            <!-- Maven Dependency Plugin - 复制所有依赖到 target/lib -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Maven Resources Plugin - 复制资源文件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- 自定义插件 - 复制 chromedriver 和其他必要文件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- 创建 drivers 目录 -->
+                                <mkdir dir="${project.build.directory}/drivers"/>
+                                
+                                <!-- 复制 chromedriver (如果存在) -->
+                                <copy todir="${project.build.directory}/drivers" failonerror="false">
+                                    <fileset dir="chromedriver">
+                                        <include name="**/chromedriver"/>
+                                        <include name="**/chromedriver.exe"/>
+                                    </fileset>
+                                </copy>
+                                
+                                <!-- 设置 chromedriver 权限 -->
+                                <chmod perm="755" failonerror="false">
+                                    <fileset dir="${project.build.directory}/drivers">
+                                        <include name="**/chromedriver"/>
+                                    </fileset>
+                                </chmod>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
