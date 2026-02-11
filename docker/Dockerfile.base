@@ -1,0 +1,56 @@
+# ============================================================
+# 国网招标爬虫 - 基础运行镜像
+# 包含: Ubuntu 20.04 + OpenJDK 21 + Chrome + 中文字体 + 工具
+# 此镜像仅需构建一次，后续升级只需更新应用包
+# ============================================================
+
+FROM ubuntu:20.04
+
+# ---------- 环境变量 ----------
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=Asia/Shanghai \
+    LANG=C.UTF-8 \
+    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
+    PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:$PATH
+
+# ---------- 基础依赖 + JDK + 工具 + 中文字体 ----------
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        # Java 运行环境
+        openjdk-21-jdk \
+        # 网络工具
+        curl wget gnupg2 ca-certificates \
+        # 调试工具
+        vim net-tools iputils-ping telnet procps \
+        # 时区 & 字体
+        tzdata locales \
+        fonts-wqy-zenhei fonts-wqy-microhei \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- 时区设置 ----------
+RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+# ---------- Google Chrome 浏览器 ----------
+# 如因网络问题无法安装，可将 google-chrome-stable.deb 放入 docker/ 目录
+# 然后取消下方注释，注释掉在线安装部分
+# COPY google-chrome-stable.deb /tmp/
+# RUN dpkg -i /tmp/google-chrome-stable.deb || apt-get -f install -y && rm /tmp/google-chrome-stable.deb
+
+#RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+#    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+#        > /etc/apt/sources.list.d/google-chrome.list && \
+#    apt-get update && \
+#    apt-get install -y --no-install-recommends google-chrome-stable && \
+#    rm -rf /var/lib/apt/lists/*
+
+# ---------- 验证安装 ----------
+RUN echo "=== Java ===" && java -version
+#    echo "=== Chrome ===" && google-chrome --version
+
+# ---------- 应用目录 ----------
+WORKDIR /app
+RUN mkdir -p /app/logs /app/data
+
+CMD ["/bin/bash"]
