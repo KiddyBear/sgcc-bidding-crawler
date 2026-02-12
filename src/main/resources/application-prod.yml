@@ -14,8 +14,8 @@ spring:
 # 钉钉推送配置
 dingtalk:
   enabled: true
-  webhook: ${DINGTALK_WEBHOOK:https://oapi.dingtalk.com/robot/send?access_token=YOUR_ACCESS_TOKEN}
-  secret: ${DINGTALK_SECRET:YOUR_SECRET}
+  webhook: ENC(b2laeEw6JlbxDzvO4pcr4+c0/K26JeWrD56IR/qGhP3k2PEGGo8IWXjDYQ/yIH7t+mKFOHXhkXw5b3ir0PwfyFzSBK3pIMsbZJ2TgOBZHuLv79KYP93TaAodkZWK8tv74UoOcomPX9SZdMUEzXTQ+Rrk/FeLr+uFbbqNfkd918g=)
+  secret: ENC(IshguzJww21kwotCL2Gn6lVAc6Um+m6IZnFWTlCabB2FpkaeUoiY7gxsLWXdChMoPLawN+M60NAOQ8cHIt2L1G+D1t+Vy7kaKupdAu+T6XQ=)
 
 # 爬虫配置
 crawler:
@@ -23,6 +23,11 @@ crawler:
   request-interval: 3000  # 请求间隔适当加大
   max-pages: 10
   cron: "0 0 */2 * * ?"  # 每2小时执行一次
+
+# 定时任务配置
+schedule:
+  cron:
+    bidding: "0 0 */3 * * ?"  # 招标公告爬取：每3小时执行一次
 
 # 日志配置
 logging:

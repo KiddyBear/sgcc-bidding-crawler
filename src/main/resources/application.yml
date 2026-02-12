@@ -66,6 +66,11 @@ crawler:
   cron: "0 0 * * * ?"
   download-file-path: /app/data
 
+# 定时任务配置
+schedule:
+  cron:
+    bidding: "0 0 */3 * * ?"  # 招标公告爬取：每3小时执行一次
+
 # Actuator 监控配置
 management:
   endpoints:

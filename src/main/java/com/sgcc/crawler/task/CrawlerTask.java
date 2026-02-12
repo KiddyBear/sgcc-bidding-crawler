@@ -3,6 +3,7 @@ package com.sgcc.crawler.task;
 import com.sgcc.crawler.entity.AnnouncementType;
 import com.sgcc.crawler.service.AnnouncementCrawlerService;
 import com.sgcc.crawler.service.CrawlerService;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,23 @@ public class CrawlerTask {
 
     @Resource
     private AnnouncementCrawlerService announcementCrawlerService;
+
+    /**
+     * 应用启动后立即执行一次爬取任务
+     */
+    @PostConstruct
+    public void initCrawl() {
+        log.info("==== 应用启动，立即执行首次爬取任务 ====");
+        // 延迟5秒执行，等待应用完全启动
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+                scheduledCrawlBidding();
+            } catch (Exception e) {
+                log.error("启动时爬取任务执行失败", e);
+            }
+        }).start();
+    }
 
     /**
      * 定时爬取任务
